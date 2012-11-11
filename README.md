@@ -1,9 +1,9 @@
 **extension_switch**
 
 
-extension_switch is template library that extend the C++ 11's switch.
-This library is able to enable the match type , match data , match types in the inheritance relationship.
-( Match regular expressions is under development. )
+extension_switch is template library that extend the C++ 11's switch.  
+This library is able to enable the match type , match data , match types in the inheritance relationship.  
+( Match regular expressions is under development. )  
 Simple sample are as follows.
 
       using namespace extension_switch;
