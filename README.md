@@ -31,9 +31,10 @@ Simple sample are as follows.
 
 extension_switch is dependent on boost::any library.
 
-**How to use **
+**How to use**
 
 See test directory.
+(Simple sample is there.)
 
 **License**
 
