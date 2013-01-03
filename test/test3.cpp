@@ -31,21 +31,21 @@ namespace {
 				     { 
 				       std::cout << "This line is digits only." << std::endl;
 				     }) ,
-	// match::regex< boost::regex >( boost::regex("^[a-z]+$") , 
-	// 			     []( const boost::smatch & result )
-	// 			     { 
-	// 			       std::cout << "This line is lower case." << std::endl;
-	// 			     }),
-	// match::regex< boost::regex >( boost::regex("^[A-Z]+$") , 
-	// 			     []( const boost::smatch & result )
-	// 			     { 
-	// 			       std::cout << "This line is uppercase." << std::endl;
-	// 			     }),
-	// match::regex< boost::regex >( boost::regex("^This year is (\\d+).$") , 
-	// 			     []( const boost::smatch & result )
-	// 			     { 
-	// 			       std::cout << "Year string is " << result.str(1) << "."  << std::endl;
-	// 			     }),
+	match::regex< boost::regex >( boost::regex("^[a-z]+$") , 
+				     []( const boost::smatch & result )
+				     { 
+				       std::cout << "This line is lower case." << std::endl;
+				     }),
+	match::regex< boost::regex >( boost::regex("^[A-Z]+$") , 
+				     []( const boost::smatch & result )
+				     { 
+				       std::cout << "This line is uppercase." << std::endl;
+				     }),
+	match::regex< boost::regex >( boost::regex("^This year is (\\d+).$") , 
+				     []( const boost::smatch & result )
+				     { 
+				       std::cout << "Year number is " << result.str(1) << "."  << std::endl;
+				     }),
 	match::other( []( const boost::any & ref)
 		      {
 			std::cout << "default type" << std::endl;
@@ -60,7 +60,9 @@ int main()
     {"123",
      "abc",
      "ABC",
-    "This year is 2013."};
+     "This year is 2013.",
+     "1234 hoge orz"
+    };
   for(const auto & l : line)
     {
       std::cout << "src  : " << l  << std::endl;

@@ -46,17 +46,18 @@ namespace extension_switch
 
       typedef std::basic_string< typename CONDITION_TYPE::value_type > REGEX_STRING_TYPE;
       typedef boost::match_results< typename REGEX_STRING_TYPE::const_iterator > MATCH_RESULTS_TYPE;
-      std::unique_ptr< MATCH_RESULTS_TYPE > match_ret_;
+      //std::unique_ptr< MATCH_RESULTS_TYPE > match_ret_;
+      std::shared_ptr< MATCH_RESULTS_TYPE > match_ret_;
   
     public:
-      match_regex_holder() = delete;
-      match_regex_holder & operator=( const match_regex_holder & ) = delete;
+    /*   match_regex_holder() = delete; */
+    /*   match_regex_holder & operator=( const match_regex_holder & ) = delete; */
 
-    match_regex_holder( match_regex_holder && ref ) :
-      c_( ref.c_ ) , l_( ref.l_ ) 
-      {
-	match_ret_ = std::move(ref.match_ret_);
-      }
+    /* match_regex_holder( match_regex_holder && ref ) : */
+    /*   c_( ref.c_ ) , l_( ref.l_ )  */
+    /*   { */
+    /* 	match_ret_ = std::move(ref.match_ret_); */
+    /*   } */
 	
     match_regex_holder( const CONDITION_TYPE & c , const lamba_type & l )
     : c_(c) , l_(l) 
