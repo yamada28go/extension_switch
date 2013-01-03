@@ -11,6 +11,26 @@
 
 namespace extension_switch
 {
+
+    template < typename lamba_type >
+      struct other_type_holder
+      {
+      private:
+	lamba_type l_;
+
+      public:  
+
+      other_type_holder( const lamba_type & l )
+      :l_(l)
+	{}
+
+	auto do_other_func( const boost::any & r ) -> decltype( l_( r  )  ) 
+	{
+	  return l_( r );
+	}
+  
+      };
+
   
     template < typename CONDITION , typename lamba_type >
       struct match_type_holder
@@ -118,9 +138,9 @@ namespace extension_switch
 	{
 	  try
 	    {
-	      // std::cout << "same" << std::endl;
-	      // std::cout << typeid(JUDGMENT_TYPE).name() << std::endl;
-	      // std::cout << typeid(CONDITION).name() << std::endl;
+	       /* std::cout << "---same---" << std::endl; */
+	       /* std::cout << typeid(JUDGMENT_TYPE).name() << std::endl; */
+	       /* std::cout << typeid(CONDITION).name() << std::endl; */
 
 	      const JUDGMENT_TYPE * t = boost::any_cast< const JUDGMENT_TYPE * >( r );
 	      const OBJECT_TYPE & ot = dynamic_cast< const OBJECT_TYPE & >(*t);
@@ -129,7 +149,7 @@ namespace extension_switch
 	    }
 	  catch( const std::exception & e )
 	    {
-	      std::cout << e.what() << std::endl;
+	      //std::cout << e.what() << std::endl;
 	    }
 
 	  return false;
@@ -148,6 +168,12 @@ namespace extension_switch
 
   namespace match
   {
+
+    template < typename T >
+      other_type_holder< T > other( const T & t )
+      {
+	return std::move( other_type_holder< T >( t ) );
+      }
     
     template < typename CONDITION , typename T >
       match_type_holder< CONDITION , T > type( const T & t )
@@ -169,18 +195,12 @@ namespace extension_switch
   }
 
 
+  //! match default type
   template < typename COND , typename LAMBDA_T >
-    auto _switch( const COND & c , LAMBDA_T t ) -> decltype( t.do_func( c ) ) 
+    auto _switch( const COND & c , LAMBDA_T t ) -> decltype( t.do_other_func( c ) ) 
   {
-    if( true == t.LAMBDA_T::template is_match< COND >( &c ) )
-      {
-	return t.do_func( &c );
-      }
-
-    //std::cout << typeid(COND).name() << std::endl;
-    throw std::runtime_error("no conditions!!!");
+    return t.do_other_func( &c );
   }
-
 
   template < typename COND , typename LAMBDA_T , typename... Args >
     auto _switch( const COND & c , LAMBDA_T t , Args... args  ) -> decltype( _switch( c , args... ) ) 

@@ -36,7 +36,13 @@ void match_test( const T & t )
 	    { 
 	      std::cout << "int:" << ref << std::endl;
 	      return "int";
-	    })
+	    }),
+	  //default type
+	  match::other( []( const boost::any & ref)
+	{
+	  std::cout << "default type" << std::endl;;
+	  return "default";
+	})
 	  );
 
       std::cout << a << std::endl;

@@ -45,7 +45,13 @@ namespace {
 					{ 
 					  std::cout << "node" << std::endl;
 					  return 1 + std::max( depth(*ref.r_) , depth(*ref.l_) );
-					})
+					}),
+	//default type
+	match::other( []( const boost::any & ref)
+		      {
+			std::cout << "default type";
+			return 0;
+		      })
 	);
   }
 
