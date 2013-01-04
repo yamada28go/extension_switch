@@ -2,30 +2,38 @@
 
 
 extension_switch is template library that extend the C++ 11's switch.  
-This library is able to enable the match type , match data , match types in the inheritance relationship.  
-( Match regular expressions is under development. )  
+This library is able to enable the match type , match data , match types , match regular expressions in the inheritance relationship.  
 Simple sample are as follows.
 
-      using namespace extension_switch;
-      const auto a = _switch
-	( t , 
-	  match::type< const double >( [](const double & ref) -> const char *
-	    { 
-	      std::cout << "double:" << ref << std::endl;
-	      return "double";
-	    }),
-	  match::type< const std::string >( [](const std::string & ref) -> const char * 
-	    { 
-	      std::cout << "string:" << ref << std::endl;
-	      return "string";
-	    }),
-	  match::data< const std::vector< int > >( {1,2,3} ,
-						   []( const  std::vector< int > & ref ) -> const char *
-	    { 
-	      std::cout << "vector 123" << std::endl;
-	      return "vector 123";
-	    }),
-	  );
+    const std::string line = "hoge".
+    using namespace extension_switch;
+    _switch
+      ( line ,
+	match::regex(boost::regex( "^[0-9]+$" ), 
+		     []( const boost::smatch & result )
+		     { 
+		       std::cout << "This line is digits only." << std::endl;
+		     }) ,
+	match::regex( boost::regex("^[a-z]+$") , 
+		      []( const boost::smatch & result )
+		      { 
+			std::cout << "This line is lower case." << std::endl;
+		      }),
+	match::regex( boost::regex("^[A-Z]+$") , 
+		      []( const boost::smatch & result )
+		      { 
+			std::cout << "This line is upper case." << std::endl;
+		      }),
+	match::regex( boost::regex("^This year is (\\d+).$") , 
+		      []( const boost::smatch & result )
+		      { 
+			std::cout << "Year number is " << result.str(1) << "."  << std::endl;
+		      }),
+	match::other( []( const boost::any & ref)
+		      {
+			std::cout << "default type" << std::endl;
+		      })
+	);
 
 **Dependency**
 
