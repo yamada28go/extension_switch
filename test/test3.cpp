@@ -26,26 +26,26 @@ namespace {
     using namespace extension_switch;
     _switch
       ( line ,
-	match::regex< boost::regex >(boost::regex( "^[0-9]+$" ), 
-				     []( const boost::smatch & result )
-				     { 
-				       std::cout << "This line is digits only." << std::endl;
-				     }) ,
-	match::regex< boost::regex >( boost::regex("^[a-z]+$") , 
-				     []( const boost::smatch & result )
-				     { 
-				       std::cout << "This line is lower case." << std::endl;
-				     }),
-	match::regex< boost::regex >( boost::regex("^[A-Z]+$") , 
-				     []( const boost::smatch & result )
-				     { 
-				       std::cout << "This line is uppercase." << std::endl;
-				     }),
-	match::regex< boost::regex >( boost::regex("^This year is (\\d+).$") , 
-				     []( const boost::smatch & result )
-				     { 
-				       std::cout << "Year number is " << result.str(1) << "."  << std::endl;
-				     }),
+	match::regex(boost::regex( "^[0-9]+$" ), 
+		     []( const boost::smatch & result )
+		     { 
+		       std::cout << "This line is digits only." << std::endl;
+		     }) ,
+	match::regex( boost::regex("^[a-z]+$") , 
+		      []( const boost::smatch & result )
+		      { 
+			std::cout << "This line is lower case." << std::endl;
+		      }),
+	match::regex( boost::regex("^[A-Z]+$") , 
+		      []( const boost::smatch & result )
+		      { 
+			std::cout << "This line is upper case." << std::endl;
+		      }),
+	match::regex( boost::regex("^This year is (\\d+).$") , 
+		      []( const boost::smatch & result )
+		      { 
+			std::cout << "Year number is " << result.str(1) << "."  << std::endl;
+		      }),
 	match::other( []( const boost::any & ref)
 		      {
 			std::cout << "default type" << std::endl;
@@ -56,17 +56,24 @@ namespace {
 
 int main()
 {
-  const std::vector< std:: string > line = 
-    {"123",
-     "abc",
-     "ABC",
-     "This year is 2013.",
-     "1234 hoge orz"
-    };
-  for(const auto & l : line)
+  try{
+    const std::vector< std:: string > line = 
+      {"123",
+       "abc",
+       "ABC",
+       "This year is 2013.",
+       "1234 hoge orz"
+      };
+
+    for(const auto & l : line)
+      {
+	std::cout << "src  : " << l  << std::endl;
+	verification(l);
+      }
+  }
+  catch( const std::exception & e)
     {
-      std::cout << "src  : " << l  << std::endl;
-      verification(l);
+      std::cout << e.what() << std::endl;
     }
 }
 

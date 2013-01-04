@@ -73,7 +73,13 @@ namespace {
 
 int main()
 {
-  node n( new leaf() , new node( new leaf() ,  new node( new leaf() , new leaf() ) ) );
+  const node n( new leaf() , new node( new leaf() ,  new node( new leaf() , new leaf() ) ) );
+
+  while(true)
+    {
+      depth( n );
+    }
+  
   std::cout << "depth is " << depth( n ) << std::endl;
 }
 
