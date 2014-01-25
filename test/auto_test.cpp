@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 //Copyright [2013] [yamada28go]
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
@@ -191,30 +189,30 @@ namespace
 				[](const boost::smatch & result)
 			{
 				std::cout << "This line is digits only." << std::endl;
-				return result::digits_only;
+				return case3::result::digits_only;
 			}),
 				match::regex(boost::regex("^[a-z]+$"),
 				[](const boost::smatch & result)
 			{
 				std::cout << "This line is lower case." << std::endl;
-				return result::lower_case;
+				return case3::result::lower_case;
 			}),
 				match::regex(boost::regex("^[A-Z]+$"),
 				[](const boost::smatch & result)
 			{
 				std::cout << "This line is upper case." << std::endl;
-				return result::upper_case;
+				return case3::result::upper_case;
 			}),
 				match::regex(boost::regex("^This year is (\\d+).$"),
 				[](const boost::smatch & result)
 			{
 				std::cout << "Year number is " << result.str(1) << "." << std::endl;
-				return result::get_yesr_number;
+				return case3::result::get_yesr_number;
 			}),
 				match::other([](const boost::any & ref)
 			{
 				std::cout << "default type" << std::endl;
-				return result::other;
+				return case3::result::other;
 			})
 				);
 		}
