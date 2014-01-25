@@ -22,6 +22,7 @@
 
 #include "extension_switch.h"
 #include "match_regex.h"
+#include "match_xpressive.h"
 
 BOOST_AUTO_TEST_SUITE(extension_switch_test_suite)
 
@@ -227,6 +228,73 @@ namespace
 		}
 
 	}
+
+	//! test4 : match xpressive regex
+	namespace case4{
+
+
+		enum result{
+			digits_only,
+			lower_case,
+			upper_case,
+			get_yesr_number,
+			other
+		};
+
+		result verification(const std::string & line)
+		{
+			using namespace extension_switch;
+			using namespace boost::xpressive;
+			return _switch
+				(line,
+				 match::xpressive_regex
+				 ( sregex(  +_d ) ,
+				  []( const smatch & result )
+				  {
+				    std::cout << "This line is digits only." << std::endl;
+				    return case4::result::digits_only;
+				  }),
+				 match::xpressive_regex
+				 ( sregex( +range('a','z') ),
+				[](const smatch & result)
+				   {
+				     std::cout << "This line is lower case." << std::endl;
+				     return case4::result::lower_case;
+				   }),
+				 match::xpressive_regex
+				 ( sregex( +range('A','Z') ),
+				[](const smatch & result)
+				   {
+				     std::cout << "This line is upper case." << std::endl;
+				     return case4::result::upper_case;
+				   }),
+				 match::xpressive_regex
+				 ( sregex( bos >> as_xpr("This year is ") >> (s1=+_d) >> as_xpr(".") >> eos ),
+				   [](const smatch & result)
+				   {
+				    std::cout << "Year number is " << result.str(1) << "." << std::endl;
+				    return case4::result::get_yesr_number;
+				   }),
+				 match::other
+				 ([](const boost::any & ref)
+				  {
+				    std::cout << "default type" << std::endl;
+				    return case4::result::other;
+				  })
+				 );
+		}
+
+		BOOST_AUTO_TEST_CASE(test_case_4)
+		{
+			BOOST_CHECK_EQUAL(case4::digits_only, case4::verification("123"));
+			BOOST_CHECK_EQUAL(case4::lower_case, case4::verification("abc"));
+			BOOST_CHECK_EQUAL(case4::upper_case, case4::verification("ABC"));
+			BOOST_CHECK_EQUAL(case4::get_yesr_number, case4::verification("This year is 2013."));
+			BOOST_CHECK_EQUAL(case4::other, case4::verification("hoge orz"));
+		}
+
+	}
+
 	
 }
 
