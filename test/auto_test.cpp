@@ -13,7 +13,9 @@
 //   limitations under the License.
 
 #define BOOST_TEST_MAIN    // Define main function
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+//#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <vector>
 #include <iostream>
@@ -232,7 +234,6 @@ namespace
 	//! test4 : match xpressive regex
 	namespace case4{
 
-
 		enum result{
 			digits_only,
 			lower_case,
@@ -247,30 +248,30 @@ namespace
 			using namespace boost::xpressive;
 			return _switch
 				(line,
-				 match::xpressive_regex
+				 xpressive::match::regex< xpressive::target::string >
 				 ( sregex(  +_d ) ,
 				  []( const smatch & result )
 				  {
 				    std::cout << "This line is digits only." << std::endl;
 				    return case4::result::digits_only;
 				  }),
-				 match::xpressive_regex
+				 xpressive::match::regex< xpressive::target::string >
 				 ( sregex( +range('a','z') ),
 				[](const smatch & result)
 				   {
 				     std::cout << "This line is lower case." << std::endl;
 				     return case4::result::lower_case;
 				   }),
-				 match::xpressive_regex
+				 xpressive::match::regex< xpressive::target::string >
 				 ( sregex( +range('A','Z') ),
 				[](const smatch & result)
 				   {
 				     std::cout << "This line is upper case." << std::endl;
 				     return case4::result::upper_case;
 				   }),
-				 match::xpressive_regex
+				 xpressive::match::regex< xpressive::target::string >
 				 ( sregex( bos >> as_xpr("This year is ") >> (s1=+_d) >> as_xpr(".") >> eos ),
-				   [](const smatch & result)
+				   [](const smatch & result )
 				   {
 				    std::cout << "Year number is " << result.str(1) << "." << std::endl;
 				    return case4::result::get_yesr_number;
@@ -295,7 +296,71 @@ namespace
 
 	}
 
-	
+	//! test5 : match xpressive regex [ target is char pointer]
+	namespace case5{
+
+		enum result{
+			digits_only,
+			lower_case,
+			upper_case,
+			get_yesr_number,
+			other
+		};
+
+		result verification(const char * line)
+		{
+			using namespace extension_switch;
+			using namespace boost::xpressive;
+			return _switch
+				(line,
+				 xpressive::match::regex< xpressive::target::c_char >
+				 ( cregex(  +_d ) ,
+				  []( const cmatch & result )
+				  {
+				    std::cout << "This line is digits only." << std::endl;
+				    return case5::result::digits_only;
+				  }),
+				 xpressive::match::regex< xpressive::target::c_char >
+				 ( cregex( +range('a','z') ),
+				[](const cmatch & result)
+				   {
+				     std::cout << "This line is lower case." << std::endl;
+				     return case5::result::lower_case;
+				   }),
+				 xpressive::match::regex< xpressive::target::c_char >
+				 ( cregex( +range('A','Z') ),
+				[](const cmatch & result)
+				   {
+				     std::cout << "This line is upper case." << std::endl;
+				     return case5::result::upper_case;
+				   }),
+				 xpressive::match::regex< xpressive::target::c_char >
+				 ( cregex( bos >> as_xpr("This year is ") >> (s1=+_d) >> as_xpr(".") >> eos ),
+				   [](const cmatch & result )
+				   {
+				    std::cout << "Year number is " << result.str(1) << "." << std::endl;
+				    return case5::result::get_yesr_number;
+				   }),
+				 match::other
+				 ([](const boost::any & ref)
+				  {
+				    std::cout << "default type" << std::endl;
+				    return case5::result::other;
+				  })
+				 );
+
+		}
+
+		BOOST_AUTO_TEST_CASE(test_case_5)
+		{
+			BOOST_CHECK_EQUAL(case5::digits_only, case5::verification("123"));
+			BOOST_CHECK_EQUAL(case5::lower_case, case5::verification("abc"));
+			BOOST_CHECK_EQUAL(case5::upper_case, case5::verification("ABC"));
+			BOOST_CHECK_EQUAL(case5::get_yesr_number, case5::verification("This year is 2013."));
+			BOOST_CHECK_EQUAL(case5::other, case5::verification("hoge orz"));
+		}
+
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

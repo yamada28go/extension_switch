@@ -2,7 +2,7 @@
 //--[extension_switch match xpressive regex]--
 //
 
-//Copyright [2013] [yamada28go]
+//Copyright [2014] [yamada28go]
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -28,73 +28,167 @@
 //extension_switch
 #include "extension_switch.h"
 
+#include <typeinfo>
+#include <cxxabi.h>
+
+//! 型名を取得する
+template<typename DST_TYPE>
+std::string get_demangled_type_name (void)
+{
+  DST_TYPE *dst = 0;
+  int status;
+  std::unique_ptr<char> ret
+    ( ( char * )(abi::__cxa_demangle (typeid ( *dst ).name (), 0, 0, &status) ));
+  if (NULL != ret)
+    {
+      return std::string( ret.get() );
+    }
+  throw std::runtime_error(" demangle was fail ");
+}
+
 namespace extension_switch
 {
+  namespace xpressive
+  {
+    namespace target
+    {
+      //! std::string型をマッチターゲットとする
+      struct string
+      {
+	typedef std::string TARGET_STRING_VALUE_T;
+	typedef boost::xpressive::smatch MATCH_T;
+	
+	//データ判定を行う
+	template< typename T_REGEX >
+	static	
+	bool is_match( const boost::any & r , const T_REGEX & c_
+		       , MATCH_T & match_ret_ )
+	{
+	  if( true ==  boost::xpressive::regex_match
+	      (  *( boost::any_cast< const TARGET_STRING_VALUE_T * >( r ) ) , match_ret_ , c_ ) )
+	    {
+	      return true;
+	    }
+	  return false;
+	}
 
-  template < typename CONDITION , typename lamba_type >
-    struct match_xpressive_regex_holder
+      };
+      
+      //const char型
+      struct c_char
+      {
+	typedef char const * TARGET_STRING_VALUE_T;
+	typedef boost::xpressive::cmatch MATCH_T;
+
+	template< typename T_REGEX >
+	static 
+	bool is_match( const boost::any & r , const T_REGEX  & c_
+		       , MATCH_T & match_ret_ )
+	{
+	  if( true ==  boost::xpressive::regex_match
+	      (  *( boost::any_cast< const TARGET_STRING_VALUE_T * >( r ) ) , match_ret_ , c_  ) )
+	    {
+	      return true;
+	    }
+	  return false;
+	}
+	
+      };
+
+    }
+
+    template < typename MATCH_TARGET , typename CONDITION , typename lamba_type >
+      struct match_xpressive_regex_holder
+      {
+
+      public:
+	
+	typedef CONDITION CONDITION_TYPE;
+  
+      private:
+
+	CONDITION_TYPE c_;
+	lamba_type l_;
+
+	typedef typename MATCH_TARGET::TARGET_STRING_VALUE_T REGEX_STRING_TYPE;
+	typedef typename MATCH_TARGET::MATCH_T MATCH_RESULTS_TYPE;
+
+	MATCH_RESULTS_TYPE match_ret_;
+  
+      public:
+	
+      match_xpressive_regex_holder( const CONDITION_TYPE & c , const lamba_type & l )
+      : c_(c) , l_(l) 
+	{}
+ 
+	auto do_func( const boost::any & r ) -> decltype( l_( match_ret_ ) )
+	{
+	  if( false == match_ret_.empty() )
+	    {
+	      return l_( match_ret_ );
+	    }
+	  throw std::runtime_error("Determination process has not been performed.");
+	}
+
+	template < typename JUDGMENT_TYPE >
+	bool is_match
+	( boost::any r ,
+	  typename std::enable_if< std::is_same< JUDGMENT_TYPE , REGEX_STRING_TYPE  >::value >::type* = 0) 
+	{
+	  std::cout << 
+	    get_demangled_type_name< const REGEX_STRING_TYPE >() 
+		    << std::endl;
+
+	  return MATCH_TARGET::template is_match( r , c_ ,  match_ret_ );
+	  
+	  //const auto str = boost::any_cast< const REGEX_STRING_TYPE * >( r );
+	  
+	  //std::cout << str << std::endl;
+	  
+	  //const REGEX_STRING_TYPE & str = *(boost::any_cast< const REGEX_STRING_TYPE * >( r ));
+
+	  /* auto str = MATCH_TARGET::is_match( r ); */
+	  /* if( true ==  boost::xpressive::regex_match( str , match_ret_ , c_ ) ) */
+	  /*   { */
+	  /*     return true; */
+	  /*   } */
+	  /* return false; */
+
+	}
+
+	template < typename JUDGMENT_TYPE >
+	bool is_match
+	( boost::any r ,
+	  typename std::enable_if< !std::is_same< JUDGMENT_TYPE , REGEX_STRING_TYPE >::value >::type* = 0 ) 
+	{		
+	  std::cout << 
+	    get_demangled_type_name<REGEX_STRING_TYPE>()
+		    << " : " << 
+	    /* get_demangled_type_name<typename CONDITION_TYPE::iterator_type>() */
+	    /* << " : " <<  */
+	    /* get_demangled_type_name<typename CONDITION_TYPE::string_type>() */
+	    /* << " : " << 	   */
+	    get_demangled_type_name<JUDGMENT_TYPE>() <<  std::endl;
+
+	  return false;
+	}
+
+      };
+
+    namespace match
     {
 
-    public:
-	
-      typedef CONDITION CONDITION_TYPE;
-  
-    private:
+      template < typename MATCH_TARGET , typename CONDITION , typename lamba_type >
+	extension_switch::xpressive::match_xpressive_regex_holder
+	< MATCH_TARGET , CONDITION , lamba_type > regex
+	( const CONDITION & cond , const lamba_type & t )
+	{
+	  return extension_switch::xpressive::match_xpressive_regex_holder
+	    < MATCH_TARGET , CONDITION , lamba_type >( cond , t );
+	}
 
-      CONDITION_TYPE c_;
-      lamba_type l_;
+    }
 
-      typedef std::basic_string< typename CONDITION_TYPE::value_type > REGEX_STRING_TYPE;
-      typedef boost::xpressive::match_results< typename REGEX_STRING_TYPE::const_iterator > MATCH_RESULTS_TYPE;
-      MATCH_RESULTS_TYPE match_ret_;
-  
-    public:
-	
-    match_xpressive_regex_holder( const CONDITION_TYPE & c , const lamba_type & l )
-    : c_(c) , l_(l) 
-      {}
- 
-      auto do_func( const boost::any & r ) -> decltype( l_( match_ret_ ) )
-      {
-      	if( false == match_ret_.empty() )
-      	  {
-      	    return l_( match_ret_ );
-      	  }
-      	throw std::runtime_error("Determination process has not been performed.");
-      }
-
-      template < typename JUDGMENT_TYPE >
-      bool is_match
-      ( boost::any r ,
-	typename std::enable_if< std::is_same< JUDGMENT_TYPE , REGEX_STRING_TYPE  >::value >::type* = 0) 
-      {
-	const REGEX_STRING_TYPE & str = *(boost::any_cast< const REGEX_STRING_TYPE * >( r ));
-	if( true ==  boost::xpressive::regex_match( str , match_ret_ , c_ ) )
-	  {
-	    return true;
-	  }
-	return false;
-
-      }
-
-      template < typename JUDGMENT_TYPE >
-      bool is_match
-      ( boost::any r ,
-	typename std::enable_if< !std::is_same< JUDGMENT_TYPE , REGEX_STRING_TYPE >::value >::type* = 0 ) 
-      {
-	return false;
-      }
-
-    };
-
-  namespace match
-  {
-    template < typename CONDITION , typename lamba_type >
-      match_xpressive_regex_holder< CONDITION , lamba_type > xpressive_regex
-      ( const CONDITION & cond , const lamba_type & t )
-      {
-	return match_xpressive_regex_holder< CONDITION , lamba_type >( cond , t );
-      }
   }
 
 }
