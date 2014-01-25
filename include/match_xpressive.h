@@ -28,28 +28,12 @@
 //extension_switch
 #include "extension_switch.h"
 
-#include <typeinfo>
-#include <cxxabi.h>
-
-//! 型名を取得する
-template<typename DST_TYPE>
-std::string get_demangled_type_name (void)
-{
-  DST_TYPE *dst = 0;
-  int status;
-  std::unique_ptr<char> ret
-    ( ( char * )(abi::__cxa_demangle (typeid ( *dst ).name (), 0, 0, &status) ));
-  if (NULL != ret)
-    {
-      return std::string( ret.get() );
-    }
-  throw std::runtime_error(" demangle was fail ");
-}
 
 namespace extension_switch
 {
   namespace xpressive
   {
+    //! 正規表現判定対象文字型
     namespace target
     {
       //! std::string型をマッチターゲットとする
@@ -97,6 +81,7 @@ namespace extension_switch
 
     }
 
+    //xpressive正規表現　情報保持オブジェクト
     template < typename MATCH_TARGET , typename CONDITION , typename lamba_type >
       struct match_xpressive_regex_holder
       {
@@ -135,24 +120,15 @@ namespace extension_switch
 	( boost::any r ,
 	  typename std::enable_if< std::is_same< JUDGMENT_TYPE , REGEX_STRING_TYPE  >::value >::type* = 0) 
 	{
-	  std::cout << 
-	    get_demangled_type_name< const REGEX_STRING_TYPE >() 
-		    << std::endl;
+	  //ログを保存
+	  EXTENSION_SWITCH_LOG
+	    ( ( boost::format( "judgment target! , JUDGMENT_TYPE : %|| , REGEX_STRING_TYPE : %||" )  
+		% get_demangled_type_name< JUDGMENT_TYPE >()
+		% get_demangled_type_name< REGEX_STRING_TYPE >() ).str() );
 
+	  //判定処理を実施。
+	  //正規表現判定対象の文字型により、判定処理が異なるため外部に委任する
 	  return MATCH_TARGET::template is_match( r , c_ ,  match_ret_ );
-	  
-	  //const auto str = boost::any_cast< const REGEX_STRING_TYPE * >( r );
-	  
-	  //std::cout << str << std::endl;
-	  
-	  //const REGEX_STRING_TYPE & str = *(boost::any_cast< const REGEX_STRING_TYPE * >( r ));
-
-	  /* auto str = MATCH_TARGET::is_match( r ); */
-	  /* if( true ==  boost::xpressive::regex_match( str , match_ret_ , c_ ) ) */
-	  /*   { */
-	  /*     return true; */
-	  /*   } */
-	  /* return false; */
 
 	}
 
@@ -160,16 +136,14 @@ namespace extension_switch
 	bool is_match
 	( boost::any r ,
 	  typename std::enable_if< !std::is_same< JUDGMENT_TYPE , REGEX_STRING_TYPE >::value >::type* = 0 ) 
-	{		
-	  std::cout << 
-	    get_demangled_type_name<REGEX_STRING_TYPE>()
-		    << " : " << 
-	    /* get_demangled_type_name<typename CONDITION_TYPE::iterator_type>() */
-	    /* << " : " <<  */
-	    /* get_demangled_type_name<typename CONDITION_TYPE::string_type>() */
-	    /* << " : " << 	   */
-	    get_demangled_type_name<JUDGMENT_TYPE>() <<  std::endl;
-
+	{
+	  //ログを保存
+	  EXTENSION_SWITCH_LOG
+	    ( ( boost::format( "not judgment target! , JUDGMENT_TYPE : %|| , REGEX_STRING_TYPE : %||" )  
+		% get_demangled_type_name< JUDGMENT_TYPE >()
+		% get_demangled_type_name< REGEX_STRING_TYPE >() ).str() );
+	  
+	  //正規表現判定対象の型では無いのでfalseを返す
 	  return false;
 	}
 
@@ -178,6 +152,7 @@ namespace extension_switch
     namespace match
     {
 
+      //正規表現判定ホルダを生成する
       template < typename MATCH_TARGET , typename CONDITION , typename lamba_type >
 	extension_switch::xpressive::match_xpressive_regex_holder
 	< MATCH_TARGET , CONDITION , lamba_type > regex

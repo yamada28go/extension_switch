@@ -21,11 +21,74 @@
 
 #include <typeinfo>
 #include <stdexcept>
-#include <boost/any.hpp>
 #include <type_traits>
+
+#include <boost/any.hpp>
+
+//デバッグモードを有効かするための定義
+//#define __EXTENSION_SWITCH_DEBUG_MODE__
+
+#ifdef __EXTENSION_SWITCH_DEBUG_MODE__
+
+//デバッグログ出力マクロ
+#include <cxxabi.h>
+#include <iostream>
+#include <boost/current_function.hpp>
+#include <boost/format.hpp>
+
+#endif  
+
 
 namespace extension_switch
 {
+
+  //デバッグモード
+#ifdef __EXTENSION_SWITCH_DEBUG_MODE__
+
+  //! 型名を取得する
+  template< typename DST_TYPE >
+    std::string get_demangled_type_name (void)
+    {
+      DST_TYPE *dst = nullptr;
+      int status;
+      std::unique_ptr<char> ret
+	( ( char * )(abi::__cxa_demangle (typeid ( *dst ).name (), 0, 0, &status) ));
+      if ( nullptr != ret.get() )
+	{
+	  return std::string( ret.get() );
+	}
+      throw std::runtime_error(" demangle was fail ");
+    }
+
+  //ロギング用マクロ  
+#define EXTENSION_SWITCH_LOG( __MSG__ )					\
+  do{									\
+    try									\
+      {									\
+	std::cout << std::endl;						\
+	std::cout << ( boost::format( "%|| , %|| , %|| , msg [ %|| ] " ) \
+		       % (__FILE__)					\
+		       % (__LINE__)					\
+		       % (BOOST_CURRENT_FUNCTION)			\
+		       % (__MSG__)					\
+		       ).str() << std::endl ;				\
+      }									\
+    catch( const std::exception & e )					\
+      {									\
+	std::cout << std::endl;						\
+	std::cout << (__FILE__) << " , "				\
+		  << (__LINE__) << " , "				\
+		  << (BOOST_CURRENT_FUNCTION) << " , "			\
+		  << "Logging failed , what [ " << e.what() << " ] "	\
+		  << std::endl;						\
+      }									\
+  }while(false)								\
+    
+#else
+  
+#define EXTENSION_SWITCH_LOG( __MSG__ )	  
+  
+#endif  
 
     template < typename lamba_type >
       struct other_type_holder
@@ -141,9 +204,6 @@ namespace extension_switch
 
 	auto do_func( const boost::any & r ) -> decltype( l_( dynamic_cast< const OBJECT_TYPE & >( *boost::any_cast< const CONDITION_TYPE * >( r ) ) ) ) 
 	{
-	  /* std::cout << typeid(OBJECT_TYPE).name() << std::endl; */
-	  /* std::cout << typeid(CONDITION).name() << std::endl; */
-	
 	  return l_( dynamic_cast< const OBJECT_TYPE & >( *boost::any_cast< const CONDITION_TYPE * >( r )  ) );
 	}
 
@@ -153,18 +213,24 @@ namespace extension_switch
 	{
 	  try
 	    {
-	       /* std::cout << "---same---" << std::endl; */
-	       /* std::cout << typeid(JUDGMENT_TYPE).name() << std::endl; */
-	       /* std::cout << typeid(CONDITION).name() << std::endl; */
 
+	      //ログを保存
+	      //以下関数を使うと例外が発生するのでここでは呼ばない
+	      //get_demangled_type_name< JUDGMENT_TYPE >()
+	      //% get_demangled_type_name< OBJECT_TYPE >()
+	      EXTENSION_SWITCH_LOG( "judgment target! " );
+	      
 	      const JUDGMENT_TYPE * t = boost::any_cast< const JUDGMENT_TYPE * >( r );
 	      const OBJECT_TYPE & ot = dynamic_cast< const OBJECT_TYPE & >(*t);
 	      (void)(ot);
 	      return true;
+	      
 	    }
 	  catch( const std::exception & e )
 	    {
-	      //std::cout << e.what() << std::endl;
+	      EXTENSION_SWITCH_LOG
+		( ( boost::format( "Cast failed , what : %||" )  
+		    % e.what() ).str() );
 	    }
 
 	  return false;
@@ -173,9 +239,12 @@ namespace extension_switch
 	template < typename JUDGMENT_TYPE >
 	bool is_match( boost::any r , typename std::enable_if< !std::is_base_of< JUDGMENT_TYPE , OBJECT_TYPE >::value >::type* = 0) const 
 	{
-	  // std::cout << "dif" << std::endl;
-	  // std::cout << typeid(JUDGMENT_TYPE).name() << std::endl;
-	  // std::cout << typeid(CONDITION).name() << std::endl;
+
+	  //ログを保存
+	  EXTENSION_SWITCH_LOG
+	    ( ( boost::format( "not judgment target! , JUDGMENT_TYPE : %|| , CONDITION : %||" )  
+		% get_demangled_type_name< JUDGMENT_TYPE >()
+		% get_demangled_type_name< CONDITION >() ).str() );
 	  return false;
 	}
 
