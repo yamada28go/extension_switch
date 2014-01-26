@@ -26,8 +26,7 @@
 #include <boost/xpressive/xpressive.hpp>
 
 //extension_switch
-#include "extension_switch.h"
-
+#include <extension_switch.h>
 
 namespace extension_switch
 {

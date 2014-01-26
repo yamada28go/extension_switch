@@ -22,9 +22,9 @@
 #include <string>
 #include <algorithm> 
 
-#include "extension_switch.h"
-#include "match_regex.h"
-#include "match_xpressive.h"
+#include <extension_switch.h>
+#include <match_regex.h>
+#include <match_xpressive.h>
 
 BOOST_AUTO_TEST_SUITE(extension_switch_test_suite)
 
